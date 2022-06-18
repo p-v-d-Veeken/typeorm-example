@@ -1,94 +1,59 @@
-
-
 # TypeormExample
 
-This project was generated using [Nx](https://nx.dev).
+This repository was created to showcase that generation migrations using the typeorm cli does not work for entities that import from other libs in the same repo.
 
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
+The goal is to generate an initial migration for the user entity in the user domain (libs/backend/user/src/lib/domain/user.entity.ts).
+According to the typeorm documentation one should be able to run:
 
-🔎 **Smart, Fast and Extensible Build System**
+```
+npm run typeorm migration:generate -- test -d libs/backend/user/orm.config.ts
+```
 
-## Adding capabilities to your workspace
+This however returns the following error:
 
-Nx supports many plugins which add capabilities for developing different types of applications and different tools.
+```
+> typeorm-example@0.0.0 typeorm
+> typeorm-ts-node-esm "migration:generate" "test" "-d" "libs/backend/user/orm.config.ts"
 
-These capabilities include generating applications, libraries, etc as well as the devtools to test, and build projects as well.
+Error during migration generation:
+libs/backend/user/src/lib/domain/user.entity.ts:2:31 - error TS2307: Cannot find module '@typeorm-example/shared/ddd-seedwork' or its corresponding type declarations.
 
-Below are our core plugins:
+2 import { AggregateRoot } from '@typeorm-example/shared/ddd-seedwork';
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/backend/user/src/lib/domain/user.entity.ts:5:14 - error TS1219: Experimental support for decorators is a feature that is subject to change in a future release. Set the 'experimentalDecorators' option in your 'tsconfig' or 'jsconfig' to remove this warning.
 
-- [React](https://reactjs.org)
-  - `npm install --save-dev @nrwl/react`
-- Web (no framework frontends)
-  - `npm install --save-dev @nrwl/web`
-- [Angular](https://angular.io)
-  - `npm install --save-dev @nrwl/angular`
-- [Nest](https://nestjs.com)
-  - `npm install --save-dev @nrwl/nest`
-- [Express](https://expressjs.com)
-  - `npm install --save-dev @nrwl/express`
-- [Node](https://nodejs.org)
-  - `npm install --save-dev @nrwl/node`
+5 export class User extends AggregateRoot {
+               ~~~~
+libs/backend/user/src/lib/domain/user.entity.ts:7:10 - error TS1219: Experimental support for decorators is a feature that is subject to change in a future release. Set the 'experimentalDecorators' option in your 'tsconfig' or 'jsconfig' to remove this warning.
 
-There are also many [community plugins](https://nx.dev/community) you could add.
+7   public name: string;
+           ~~~~
+```
 
-## Generate an application
+Apparently the ts-node settings used by typeorm are incorrect. Maybe we should register our paths?
 
-Run `nx g @nrwl/react:app my-app` to generate an application.
+```
+ts-node --project tsconfig.base.json -r tsconfig-paths/register node_modules/typeorm/cli-ts-node-commonjs.js migration:generate test -d libs/backend/user/orm.config.ts
+```
 
-> You can use any of the plugins above to generate applications as well.
+Unfortunately no:
 
-When using Nx, you can create multiple applications and libraries in the same workspace.
+```
+Error during migration generation:
+libs/backend/user/src/lib/domain/user.entity.ts:3:31 - error TS2307: Cannot find module '@typeorm-example/shared/ddd-seedwork' or its corresponding type declarations.
 
-## Generate a library
+3 import { AggregateRoot } from '@typeorm-example/shared/ddd-seedwork';
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/backend/user/src/lib/domain/user.entity.ts:5:17 - error TS7006: Parameter 'name' implicitly has an 'any' type.
 
-Run `nx g @nrwl/react:lib my-lib` to generate a library.
+5     constructor(name) {
+                  ~~~~
+libs/backend/user/src/lib/domain/user.entity.ts:7:14 - error TS2339: Property 'name' does not exist on type 'User'.
 
-> You can also use any of the plugins above to generate libraries as well.
+7         this.name = name;
 
-Libraries are shareable across libraries and applications. They can be imported from `@typeorm-example/mylib`.
+```
 
-## Development server
+At this point we could start messing with compilerOptions to try and get ts-node to accept the errors. But obviously it will keep failing at the import that cannot be found.
 
-Run `nx serve my-app` for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `nx g @nrwl/react:component my-component --project=my-app` to generate a new component.
-
-## Build
-
-Run `nx build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `nx test my-app` to execute the unit tests via [Jest](https://jestjs.io).
-
-Run `nx affected:test` to execute the unit tests affected by a change.
-
-## Running end-to-end tests
-
-Run `nx e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
-
-Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
-
-## Understand your workspace
-
-Run `nx graph` to see a diagram of the dependencies of your projects.
-
-## Further help
-
-Visit the [Nx Documentation](https://nx.dev) to learn more.
-
-
-
-## ☁ Nx Cloud
-
-### Distributed Computation Caching & Distributed Task Execution
-
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
-
-Nx Cloud pairs with Nx in order to enable you to build and test code more rapidly, by up to 10 times. Even teams that are new to Nx can connect to Nx Cloud and start saving time instantly.
-
-Teams using Nx gain the advantage of building full-stack applications with their preferred framework alongside Nx’s advanced code generation and project dependency graph, plus a unified experience for both frontend and backend developers.
-
-Visit [Nx Cloud](https://nx.app/) to learn more.
+How to proceed?
