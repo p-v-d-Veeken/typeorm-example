@@ -14,7 +14,12 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@typeorm-example/backend/user": ["libs/backend/user/src/index.ts"],
+      "@typeorm-example/shared/ddd-seedwork": [
+        "libs/shared/ddd-seedwork/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

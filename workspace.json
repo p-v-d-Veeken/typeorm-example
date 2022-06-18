@@ -2,6 +2,8 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
-    "bananas": "apps/bananas"
+    "backend-user": "libs/backend/user",
+    "bananas": "apps/bananas",
+    "shared-ddd-seedwork": "libs/shared/ddd-seedwork"
   }
 }
